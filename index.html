@@ -2,8 +2,9 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
-  <title>Entwurf – Send Message Safety</title>
- <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Entwurf – Send Message Safely</title>
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 
   <!-- PWA Manifest -->
   <link rel="manifest" href="manifest.webmanifest" />
@@ -13,75 +14,6 @@
 </head>
 <body>
   <div class="app">
-    <!-- LOGIN BEREICH -->
-<script type="module">
-  import { guestLogin, getCurrentUser, logoutUser } from "./auth.js";
-  import { addFriend, getFriends, openChatWith, getActiveChat } from "./friends.js";
-
-  const currentUser = getCurrentUser();
-  const activeChat = getActiveChat();
-
-  // Login UI erzeugen wenn nicht eingeloggt
-  if (!currentUser) {
-    document.body.innerHTML = `
-      <div class="login-container">
-        <h2>Willkommen bei Entwurf</h2>
-        <input id="usernameInput" placeholder="Benutzernamen erstellen..." />
-        <button id="loginBtn">Gast beitreten</button>
-      </div>
-    `;
-
-    setTimeout(() => {
-      document.getElementById("loginBtn").addEventListener("click", () => {
-        const name = document.getElementById("usernameInput").value.trim();
-        guestLogin(name);
-      });
-    }, 100);
-  } else {
-    // Freunde UI anzeigen wenn eingeloggt
-    const friends = getFriends();
-    document.getElementById("currentUserLabel").innerText = currentUser.name;
-
-    // Freund adden UI
-    document.getElementById("newChatInput").placeholder = "Freund adden oder chat starten...";
-
-    document.getElementById("newChatBtn").addEventListener("click", () => {
-      const friendName = document.getElementById("newChatInput").value.trim();
-      const updated = addFriend(friendName);
-
-      if (updated) {
-        alert("Freund added: " + friendName);
-        document.getElementById("newChatInput").value = "";
-      }
-    });
-
-    // Sidebar Friends anzeigen
-    const sidebar = document.getElementById("chatSidebar");
-    sidebar.innerHTML = friends.map(f => `
-      <div class="friend" onclick="startChat('${f}')">
-        ${f}
-      </div>
-    `).join("");
-
-    // Nachrichten input nur freigeben wenn chat gewählt
-    const msgInput = document.getElementById("messageInput");
-    const sendBtn = document.getElementById("sendMessageBtn");
-
-    if (activeChat) {
-      msgInput.disabled = false;
-      sendBtn.disabled = false;
-      document.getElementById("currentChatLabel").innerText = activeChat;
-    } else {
-      msgInput.disabled = true;
-      sendBtn.disabled = true;
-    }
-
-    window.startChat = function(name) {
-      openChatWith(name);
-    }
-  }
-</script>
-
     <header class="app-header">
       <div class="logo">
         <span class="logo-mark">E</span>
@@ -126,16 +58,17 @@
     </main>
   </div>
 
-  <script src="app.js"></script>
-<script type="module">
-  import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+  <!-- Supabase Client -->
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-  const supabaseUrl = "https://yjkeoqbfucjfgcpnngih.supabase.co";
-  const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlqa2VvcWJmdWNqZmdjcG5uZ2loIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1MTMxMDYsImV4cCI6MjA4MDA4OTEwNn0.BRSRdRSUvwTNvkpLoXXTkYoP1ud6DOTzBBbG3g9T2zc";
-  window.supabase = createClient(supabaseUrl, supabaseKey);
-</script>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    const supabaseUrl = "https://yjkeoqbfucjfgcpnngih.supabase.co";
+    const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlqa2VvcWJmdWNqZmdjcG5uZ2loIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1MTMxMDYsImV4cCI6MjA4MDA4OTEwNn0.BRSRdRSUvwTNvkpLoXXTkYoP1ud6DOTzBBbG3g9T2zc";
+
+    window.supabase = createClient(supabaseUrl, supabaseKey);
+  </script>
+
+  <!-- App-Logik -->
+  <script src="app.js"></script>
 </body>
 </html>
-
-
