@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>Entwurf – Send Message Safety</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.webmanifest" />
+
+  <!-- Basic Styles -->
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="app-header">
+      <div class="logo">
+        <span class="logo-mark">E</span>
+        <span class="logo-text">Entwurf</span>
+      </div>
+      <div class="user-status">
+        <span id="currentUserLabel"></span>
+      </div>
+    </header>
+
+    <main class="app-main">
+      <section class="sidebar">
+        <div class="sidebar-header">
+          <h2>Chats</h2>
+        </div>
+        <div class="new-chat">
+          <input
+            type="text"
+            id="chatPartnerInput"
+            placeholder="Kontakt-ID eingeben"
+          />
+          <button id="createChatBtn">+</button>
+        </div>
+        <ul id="chatList" class="chat-list"></ul>
+      </section>
+
+      <section class="chat-area">
+        <div class="chat-header">
+          <h2 id="activeChatTitle">Kein Chat ausgewählt</h2>
+        </div>
+        <div id="messageContainer" class="message-container"></div>
+        <form id="messageForm" class="message-form">
+          <input
+            type="text"
+            id="messageInput"
+            placeholder="Nachricht als Entwurf senden..."
+            autocomplete="off"
+          />
+          <button type="submit">Senden</button>
+        </form>
+      </section>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
