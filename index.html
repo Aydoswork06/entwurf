@@ -127,5 +127,13 @@
   </div>
 
   <script src="app.js"></script>
+<script type="module">
+  import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+  const supabaseUrl = "https://yjkeoqbfucjfgcpnngih.supabase.co";
+  const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlqa2VvcWJmdWNqZmdjcG5uZ2loIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1MTMxMDYsImV4cCI6MjA4MDA4OTEwNn0.BRSRdRSUvwTNvkpLoXXTkYoP1ud6DOTzBBbG3g9T2zc";
+  window.supabase = createClient(supabaseUrl, supabaseKey);
+</script>
 </body>
 </html>
+
