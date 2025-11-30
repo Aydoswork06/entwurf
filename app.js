@@ -3,7 +3,7 @@ const currentUser = "Du"; // MVP: später Login-System
 let chats = []; // { id, name, messages: [] }
 let activeChatId = null;
 
-const MAX_MESSAGES_PER_CHAT = 30;
+const MAX_MESSAGES_PER_CHAT = 7;
 
 // *************** DOM ELEMENTS ****************
 const currentUserLabel = document.getElementById("currentUserLabel");
@@ -158,3 +158,4 @@ messageForm.addEventListener("submit", (e) => {
   addMessageToActiveChat(text);
   messageInput.value = "";
 });
+
