@@ -1,26 +1,30 @@
-// Gast Account erstellen + merken
-export function guestLogin(username) {
-  if (!username) return alert("Gib einen Benutzernamen ein!");
+// Freundesliste speichern
+export function addFriend(friendUsername) {
+  if (!friendUsername) return alert("Gib einen Benutzernamen ein!");
 
-  const guestUser = {
-    name: username,
-    id: "guest_" + Date.now(),
-  };
+  let friends = JSON.parse(localStorage.getItem("entwurf_friends")) || [];
 
-  // local speichern, damit du wieder rein kannst
-  localStorage.setItem("entwurf_user", JSON.stringify(guestUser));
+  if (friends.includes(friendUsername)) {
+    return alert("Dieser Freund existiert schon!");
+  }
+
+  friends.push(friendUsername);
+  localStorage.setItem("entwurf_friends", JSON.stringify(friends));
+  return friends;
+}
+
+// Freunde abrufen
+export function getFriends() {
+  return JSON.parse(localStorage.getItem("entwurf_friends")) || [];
+}
+
+// Chat mit Freund öffnen
+export function openChatWith(friendUsername) {
+  localStorage.setItem("entwurf_active_chat", friendUsername);
   window.location.reload();
 }
 
-// gespeicherten User abrufen
-export function getCurrentUser() {
-  const user = localStorage.getItem("entwurf_user");
-  return user ? JSON.parse(user) : null;
+// aktiven Chat abrufen
+export function getActiveChat() {
+  return localStorage.getItem("entwurf_active_chat");
 }
-
-// logout wieder Gast zutritt ermöglichen
-export function logoutUser() {
-  localStorage.removeItem("entwurf_user");
-  window.location.reload();
-}
-
