@@ -1,23 +1,19 @@
-// Einfacher 2-Handy-Chat mit Supabase
-// ===================================
+// ENTWURF – simpler 2-Handy-Chat mit Supabase
+// ==========================================
 
-// 1. Username holen oder neu fragen
+// 1. Username automatisch vergeben (ohne hässliches Popup)
 let currentUser = localStorage.getItem("entwurf_username");
 
 if (!currentUser) {
-  currentUser = prompt("Wähle einen Benutzernamen:");
-  if (!currentUser || !currentUser.trim()) {
-    currentUser = "Gast_" + Math.floor(Math.random() * 9999);
-  }
-  currentUser = currentUser.trim();
+  currentUser = "User_" + Math.floor(Math.random() * 100000);
   localStorage.setItem("entwurf_username", currentUser);
 }
 
-// 2. Basis-Elemente im DOM holen
+// 2. DOM-Elemente holen
 const userLabel = document.getElementById("currentUserLabel");
 const chatList = document.getElementById("chatList");
 const newChatInput = document.getElementById("newChatInput");
-const newChatBtn = document.getElementById("newChatBtn");
+const newChatBtn = document.getElementById("createChatBtn"); // <– WICHTIG: Button-ID
 const currentChatLabel = document.getElementById("currentChatLabel");
 const messageContainer = document.getElementById("messageContainer");
 const messageForm = document.getElementById("messageForm");
@@ -28,17 +24,17 @@ if (userLabel) {
   userLabel.textContent = currentUser;
 }
 
-// 3. Aktiver Gesprächspartner (der andere User)
+// 3. Aktiver Gesprächspartner
 let activePartner = null;
 let pollInterval = null;
 
-// kleine Helfer-Funktion für Chat-ID (gleiche ID für beide User)
+// Helfer: gleiche Chat-ID für beide User
 function makeChatId(userA, userB) {
   const sorted = [userA, userB].sort();
   return `${sorted[0]}__${sorted[1]}`;
 }
 
-// 4. Chatliste rendern (nur aktuell gewählter Partner)
+// 4. Chatliste (nur 1 aktiver Chat)
 function renderChatList() {
   if (!chatList) return;
   chatList.innerHTML = "";
@@ -54,7 +50,7 @@ function renderChatList() {
   chatList.appendChild(li);
 }
 
-// 5. Nachrichten in den Chat zeichnen
+// 5. Nachrichten im Chat anzeigen
 function renderMessages(messages) {
   if (!messageContainer) return;
   messageContainer.innerHTML = "";
@@ -67,16 +63,14 @@ function renderMessages(messages) {
     } else {
       div.classList.add("other");
     }
-
     div.textContent = msg.text;
     messageContainer.appendChild(div);
   });
 
-  // auto nach unten scrollen
   messageContainer.scrollTop = messageContainer.scrollHeight;
 }
 
-// 6. Nachrichten vom Server holen (nur letzter 7)
+// 6. Nachrichten vom Server (nur letzte 7)
 async function loadMessages() {
   if (!activePartner || !window.supabase) return;
 
@@ -93,12 +87,11 @@ async function loadMessages() {
     return;
   }
 
-  // nur die letzten 7 anzeigen
   const lastSeven = data.slice(-7);
   renderMessages(lastSeven);
 }
 
-// 7. Polling starten (alle 2 Sekunden neue Nachrichten holen)
+// 7. Polling starten (alle 2 Sekunden)
 function startPolling() {
   if (!activePartner) return;
 
@@ -148,7 +141,7 @@ async function sendMessage(text) {
   await loadMessages();
 }
 
-// 9. Events für neuen Chat & Formular
+// 9. Events: neuen Chat anlegen + Formular
 if (newChatBtn && newChatInput) {
   newChatBtn.addEventListener("click", () => {
     const partner = newChatInput.value.trim();
@@ -175,6 +168,3 @@ if (sendMessageBtn && messageInput) {
     sendMessage(messageInput.value);
   });
 }
-
-// Beim Laden: falls es schon einen gespeicherten Partner gäbe, könntest du hier was tun.
-// Für jetzt startet man einfach über das Feld "Kontakt-ID" oben links.
