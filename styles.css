@@ -95,7 +95,10 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: #05070a;
   color: #f5f5f5;
-  font-size: 0.85rem;
+
+  /* 🔥 Fix gegen iOS Zoom */
+  font-size: 16px;  /* MUSS 16px sein, nicht weniger!!! */
+  -webkit-text-size-adjust: 100%;
 }
 
 .new-chat input:focus {
@@ -236,4 +239,57 @@ body {
     flex: 1;
     min-height: 0;
   }
+}
+/* LOGIN */
+.login-container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  background: black;
+  color: white;
+  font-family: sans-serif;
+}
+
+.login-container input {
+  padding: 0.5rem 1rem;
+  width: 220px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: #0a0f14;
+  color: white;
+  border-radius: 8px;
+}
+
+.login-container button {
+  padding: 0.5rem 1rem;
+  width: 220px;
+  border: none;
+  background: #32d6ff;
+  color: black;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+/* FREUNDE SIDEBAR */
+#chatSidebar .friend {
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  cursor: pointer;
+  color: #b0b6bc;
+  font-family: sans-serif;
+  font-size: 0.9rem;
+}
+
+#chatSidebar .friend:hover {
+  background: rgba(50,214,255,0.05);
+  color: #32d6ff;
+}
+
+/* MOBILE RESPONSIVE FIX */
+.friend {
+  -webkit-user-select: none;
+  user-select: none;
 }
