@@ -1,183 +1,180 @@
-// *************** BASIC STATE ****************
-const currentUser = "Du"; // MVP: später Login-System
-let chats = []; // { id, name, messages: [] }
-let activeChatId = null;
+// Einfacher 2-Handy-Chat mit Supabase
+// ===================================
 
-const MAX_MESSAGES_PER_CHAT = 7;
+// 1. Username holen oder neu fragen
+let currentUser = localStorage.getItem("entwurf_username");
 
-// *************** DOM ELEMENTS ****************
-const currentUserLabel = document.getElementById("currentUserLabel");
-const chatPartnerInput = document.getElementById("chatPartnerInput");
-const createChatBtn = document.getElementById("createChatBtn");
-const chatListEl = document.getElementById("chatList");
-const activeChatTitleEl = document.getElementById("activeChatTitle");
-const messageContainerEl = document.getElementById("messageContainer");
+if (!currentUser) {
+  currentUser = prompt("Wähle einen Benutzernamen:");
+  if (!currentUser || !currentUser.trim()) {
+    currentUser = "Gast_" + Math.floor(Math.random() * 9999);
+  }
+  currentUser = currentUser.trim();
+  localStorage.setItem("entwurf_username", currentUser);
+}
+
+// 2. Basis-Elemente im DOM holen
+const userLabel = document.getElementById("currentUserLabel");
+const chatList = document.getElementById("chatList");
+const newChatInput = document.getElementById("newChatInput");
+const newChatBtn = document.getElementById("newChatBtn");
+const currentChatLabel = document.getElementById("currentChatLabel");
+const messageContainer = document.getElementById("messageContainer");
 const messageForm = document.getElementById("messageForm");
 const messageInput = document.getElementById("messageInput");
+const sendMessageBtn = document.getElementById("sendMessageBtn");
 
-// *************** INIT ****************
-function loadFromStorage() {
-  try {
-    const raw = localStorage.getItem("entwurf_chats");
-    if (raw) {
-      chats = JSON.parse(raw);
+if (userLabel) {
+  userLabel.textContent = currentUser;
+}
+
+// 3. Aktiver Gesprächspartner (der andere User)
+let activePartner = null;
+let pollInterval = null;
+
+// kleine Helfer-Funktion für Chat-ID (gleiche ID für beide User)
+function makeChatId(userA, userB) {
+  const sorted = [userA, userB].sort();
+  return `${sorted[0]}__${sorted[1]}`;
+}
+
+// 4. Chatliste rendern (nur aktuell gewählter Partner)
+function renderChatList() {
+  if (!chatList) return;
+  chatList.innerHTML = "";
+
+  if (!activePartner) return;
+
+  const li = document.createElement("li");
+  li.textContent = activePartner;
+  li.classList.add("active");
+  li.addEventListener("click", () => {
+    startPolling();
+  });
+  chatList.appendChild(li);
+}
+
+// 5. Nachrichten in den Chat zeichnen
+function renderMessages(messages) {
+  if (!messageContainer) return;
+  messageContainer.innerHTML = "";
+
+  messages.forEach((msg) => {
+    const div = document.createElement("div");
+    div.classList.add("message");
+    if (msg.sender === currentUser) {
+      div.classList.add("me");
+    } else {
+      div.classList.add("other");
     }
-  } catch (err) {
-    console.error("Fehler beim Laden aus localStorage:", err);
-    chats = [];
-  }
+
+    div.textContent = msg.text;
+    messageContainer.appendChild(div);
+  });
+
+  // auto nach unten scrollen
+  messageContainer.scrollTop = messageContainer.scrollHeight;
 }
 
-function saveToStorage() {
-  try {
-    localStorage.setItem("entwurf_chats", JSON.stringify(chats));
-  } catch (err) {
-    console.error("Fehler beim Speichern:", err);
-  }
-}
+// 6. Nachrichten vom Server holen (nur letzter 7)
+async function loadMessages() {
+  if (!activePartner || !window.supabase) return;
 
-function init() {
-  currentUserLabel.textContent = `Eingeloggt als: ${currentUser}`;
-  loadFromStorage();
-  renderChatList();
-  if (chats.length > 0) {
-    setActiveChat(chats[0].id);
-  }
-}
+  const chatId = makeChatId(currentUser, activePartner);
 
-init();
+  const { data, error } = await window.supabase
+    .from("messages")
+    .select("*")
+    .eq("chat_id", chatId)
+    .order("created_at", { ascending: true });
 
-// *************** CHAT HANDLING ****************
-
-function createChat(name) {
-  const trimmed = name.trim();
-  if (!trimmed) return;
-
-  const newChat = {
-    id: Date.now().toString(),
-    name: trimmed,
-    messages: []
-  };
-
-  chats.unshift(newChat);
-  saveToStorage();
-  renderChatList();
-  setActiveChat(newChat.id);
-  chatPartnerInput.value = "";
-}
-
-function setActiveChat(chatId) {
-  activeChatId = chatId;
-  const chat = chats.find(c => c.id === chatId);
-  if (!chat) {
-    activeChatTitleEl.textContent = "Kein Chat ausgewählt";
-    messageContainerEl.innerHTML = "";
+  if (error) {
+    console.error("Fehler beim Laden:", error);
     return;
   }
 
-  activeChatTitleEl.textContent = chat.name;
-  renderMessages(chat);
-  highlightActiveChat(chatId);
+  // nur die letzten 7 anzeigen
+  const lastSeven = data.slice(-7);
+  renderMessages(lastSeven);
 }
 
-function highlightActiveChat(chatId) {
-  const items = chatListEl.querySelectorAll("li");
-  items.forEach(li => {
-    if (li.dataset.id === chatId) {
-      li.classList.add("active");
-    } else {
-      li.classList.remove("active");
-    }
-  });
+// 7. Polling starten (alle 2 Sekunden neue Nachrichten holen)
+function startPolling() {
+  if (!activePartner) return;
+
+  if (currentChatLabel) {
+    currentChatLabel.textContent = activePartner;
+  }
+
+  if (messageInput && sendMessageBtn) {
+    messageInput.disabled = false;
+    sendMessageBtn.disabled = false;
+  }
+
+  renderChatList();
+  loadMessages();
+
+  if (pollInterval) clearInterval(pollInterval);
+  pollInterval = setInterval(loadMessages, 2000);
 }
 
-function renderChatList() {
-  chatListEl.innerHTML = "";
-  chats.forEach(chat => {
-    const li = document.createElement("li");
-    li.dataset.id = chat.id;
-    li.innerHTML = `
-      <span>${chat.name}</span>
-    `;
-    li.addEventListener("click", () => setActiveChat(chat.id));
-    chatListEl.appendChild(li);
-  });
-}
+// 8. Nachricht senden
+async function sendMessage(text) {
+  if (!text || !text.trim()) return;
+  if (!activePartner) {
+    alert("Wähle zuerst einen Chat-Partner.");
+    return;
+  }
+  if (!window.supabase) {
+    alert("Supabase ist nicht verbunden.");
+    return;
+  }
 
-function renderMessages(chat) {
-  messageContainerEl.innerHTML = "";
-  chat.messages.forEach(msg => {
-    const div = document.createElement("div");
-    div.classList.add("message");
-    div.classList.add(msg.from === currentUser ? "me" : "other");
-    div.textContent = msg.text;
-    messageContainerEl.appendChild(div);
-  });
-  messageContainerEl.scrollTop = messageContainerEl.scrollHeight;
-}
+  const chatId = makeChatId(currentUser, activePartner);
 
-function addMessageToActiveChat(text) {
-  const chat = chats.find(c => c.id === activeChatId);
-  if (!chat) return;
-
-  chat.messages.push({
-    id: Date.now().toString(),
-    from: currentUser,
+  const { error } = await window.supabase.from("messages").insert({
+    chat_id: chatId,
+    sender: currentUser,
     text: text.trim(),
-    createdAt: new Date().toISOString()
   });
 
-  // Entwurf-Mechanik: nur die letzten X Nachrichten bleiben
-  if (chat.messages.length > MAX_MESSAGES_PER_CHAT) {
-    chat.messages = chat.messages.slice(
-      chat.messages.length - MAX_MESSAGES_PER_CHAT
-    );
+  if (error) {
+    console.error("Fehler beim Senden:", error);
+    alert("Konnte Nachricht nicht senden.");
+    return;
   }
 
-  saveToStorage();
-  renderMessages(chat);
-}
-
-// *************** EVENT LISTENERS ****************
-
-createChatBtn.addEventListener("click", () => {
-  createChat(chatPartnerInput.value);
-});
-
-chatPartnerInput.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") {
-    e.preventDefault();
-    createChat(chatPartnerInput.value);
-  }
-});
-
-messageForm.addEventListener("submit", (e) => {
-  e.preventDefault();
-  const text = messageInput.value.trim();
-  if (!text || !activeChatId) return;
-  addMessageToActiveChat(text);
   messageInput.value = "";
-});
-// Message im aktiven Chat speichern
-import { getCurrentUser } from "./auth.js";
-import { getActiveChat } from "./friends.js";
-
-export function sendMessage(text) {
-  const user = getCurrentUser();
-  const chatPartner = getActiveChat();
-  if (!user || !chatPartner) {
-    return alert("Erst chat auswählen Bruder!");
-  }
-
-  let chats = JSON.parse(localStorage.getItem("entwurf_chats")) || {};
-  if (!chats[chatPartner]) chats[chatPartner] = [];
-
-  const msg = {
-    from: user.name,
-    text: text,
-    time: new Date().toLocaleTimeString(),
-  };
-
-  chats[chatPartner].push(msg);
-  localStorage.setItem("entwurf_chats", JSON.stringify(chats));
+  await loadMessages();
 }
+
+// 9. Events für neuen Chat & Formular
+if (newChatBtn && newChatInput) {
+  newChatBtn.addEventListener("click", () => {
+    const partner = newChatInput.value.trim();
+    if (!partner) return;
+    if (partner === currentUser) {
+      alert("Du kannst keinen Chat mit dir selbst starten.");
+      return;
+    }
+    activePartner = partner;
+    newChatInput.value = "";
+    startPolling();
+  });
+}
+
+if (messageForm && messageInput) {
+  messageForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    sendMessage(messageInput.value);
+  });
+}
+
+if (sendMessageBtn && messageInput) {
+  sendMessageBtn.addEventListener("click", () => {
+    sendMessage(messageInput.value);
+  });
+}
+
+// Beim Laden: falls es schon einen gespeicherten Partner gäbe, könntest du hier was tun.
+// Für jetzt startet man einfach über das Feld "Kontakt-ID" oben links.
