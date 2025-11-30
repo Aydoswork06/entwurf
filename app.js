@@ -158,4 +158,26 @@ messageForm.addEventListener("submit", (e) => {
   addMessageToActiveChat(text);
   messageInput.value = "";
 });
+// Message im aktiven Chat speichern
+import { getCurrentUser } from "./auth.js";
+import { getActiveChat } from "./friends.js";
 
+export function sendMessage(text) {
+  const user = getCurrentUser();
+  const chatPartner = getActiveChat();
+  if (!user || !chatPartner) {
+    return alert("Erst chat auswählen Bruder!");
+  }
+
+  let chats = JSON.parse(localStorage.getItem("entwurf_chats")) || {};
+  if (!chats[chatPartner]) chats[chatPartner] = [];
+
+  const msg = {
+    from: user.name,
+    text: text,
+    time: new Date().toLocaleTimeString(),
+  };
+
+  chats[chatPartner].push(msg);
+  localStorage.setItem("entwurf_chats", JSON.stringify(chats));
+}
